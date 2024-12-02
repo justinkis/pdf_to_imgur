@@ -1,9 +1,9 @@
 import sys
 from flask import Flask, request, jsonify, render_template
 import os
-import fitz  # PyMuPDF
+import fitz 
 import requests
-import webbrowser  # Для открытия ссылок
+import webbrowser  
 from werkzeug.utils import secure_filename
 from pathlib import Path
 from threading import Thread
@@ -12,7 +12,6 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtGui import QIcon, QPalette, QColor
 
-# Ваш Client ID от Imgur
 IMGUR_CLIENT_ID = "YOUR_CLIENT_ID"
 
 UPLOAD_FOLDER = 'uploads'
@@ -21,10 +20,8 @@ ALLOWED_EXTENSIONS = {'pdf'}
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# Создаём папку для временных файлов, если её нет
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Определение пути к системной папке загрузок
 SYSTEM_DOWNLOAD_FOLDER = str(Path.home() / "Downloads")
 
 def allowed_file(filename):
@@ -55,7 +52,7 @@ def upload_to_imgur(image_path):
         if response.status_code == 200:
             data = response.json()
             imgur_link = data['data']['link']
-            webbrowser.open_new_tab(imgur_link)  # Открытие ссылки в новой вкладке браузера
+            webbrowser.open_new_tab(imgur_link) 
             return imgur_link
         else:
             return None
@@ -79,7 +76,6 @@ def convert_pdf_to_png(pdf_path, output_folder):
             pix.save(image_path)
             converted_files.append(image_path)
             
-            # Автоматическая загрузка на Imgur
             imgur_link = upload_to_imgur(image_path)
             if imgur_link:
                 imgur_links.append(imgur_link)
@@ -120,36 +116,30 @@ def upload_file():
     else:
         return jsonify({"error": "Недопустимый файл"}), 400
 
-# Функция для запуска Flask в отдельном потоке
 def run_flask():
     app.run(debug=True, use_reloader=False, threaded=True)
 
-# Класс для отображения веб-интерфейса Flask через PyQt
 class BrowserWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("PDF to PNG Converter")
         self.setGeometry(100, 100, 1200, 800)
 
-        # Проверка существования файла иконки
         icon_path = 'icon.ico'
         if os.path.exists(icon_path):
-            self.setWindowIcon(QIcon(icon_path))  # Установим иконку, если файл найден
+            self.setWindowIcon(QIcon(icon_path))  
         else:
             print(f"Иконка не найдена: {icon_path}")
 
-        # Применение темной темы
         self.set_dark_theme()
 
-        self.setFixedSize(450, 400)  # Ширина: 450, Высота: 350
+        self.setFixedSize(450, 400) 
 
         self.setWindowIcon(QIcon('C:/Users/justi/Downloads/docx/icon.ico'))
 
-        # Создаем QWebEngineView для отображения веб-страницы
         self.browser = QWebEngineView()
         self.browser.setUrl(QUrl("http://127.0.0.1:5000/"))
 
-        # Устанавливаем QWebEngineView в качестве центрального виджета
         layout = QVBoxLayout()
         layout.addWidget(self.browser)
 
@@ -161,7 +151,6 @@ class BrowserWindow(QMainWindow):
         """Настройка темной темы для приложения"""
         app_palette = QPalette()
         
-        # Устанавливаем темные цвета для фона и текста
         app_palette.setColor(QPalette.Background, QColor(53, 53, 53))
         app_palette.setColor(QPalette.Window, QColor(53, 53, 53))
         app_palette.setColor(QPalette.WindowText, QColor(255, 255, 255))
@@ -172,7 +161,6 @@ class BrowserWindow(QMainWindow):
         
         self.setPalette(app_palette)
 
-        # Настройка стилей для верхней панели окна
         self.setStyleSheet("""
             QMainWindow {
                 background-color: #353535;
@@ -192,12 +180,10 @@ class BrowserWindow(QMainWindow):
         """)
 
 if __name__ == '__main__':
-    # Запуск Flask в отдельном потоке
     flask_thread = Thread(target=run_flask)
     flask_thread.daemon = True
     flask_thread.start()
 
-    # Запуск PyQt5 приложения
     qt_app = QApplication(sys.argv)
     window = BrowserWindow()
     window.show()

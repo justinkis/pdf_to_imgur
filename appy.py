@@ -10,6 +10,7 @@ from threading import Thread
 from PyQt5.QtCore import QUrl
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 from PyQt5.QtWebEngineWidgets import QWebEngineView
+from PyQt5.QtGui import QIcon, QPalette, QColor
 
 # Ваш Client ID от Imgur
 IMGUR_CLIENT_ID = "YOUR_CLIENT_ID"
@@ -130,6 +131,20 @@ class BrowserWindow(QMainWindow):
         self.setWindowTitle("PDF to PNG Converter")
         self.setGeometry(100, 100, 1200, 800)
 
+        # Проверка существования файла иконки
+        icon_path = 'icon.ico'
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))  # Установим иконку, если файл найден
+        else:
+            print(f"Иконка не найдена: {icon_path}")
+
+        # Применение темной темы
+        self.set_dark_theme()
+
+        self.setFixedSize(450, 400)  # Ширина: 450, Высота: 350
+
+        self.setWindowIcon(QIcon('C:/Users/justi/Downloads/docx/icon.ico'))
+
         # Создаем QWebEngineView для отображения веб-страницы
         self.browser = QWebEngineView()
         self.browser.setUrl(QUrl("http://127.0.0.1:5000/"))
@@ -142,6 +157,40 @@ class BrowserWindow(QMainWindow):
         container.setLayout(layout)
         self.setCentralWidget(container)
 
+    def set_dark_theme(self):
+        """Настройка темной темы для приложения"""
+        app_palette = QPalette()
+        
+        # Устанавливаем темные цвета для фона и текста
+        app_palette.setColor(QPalette.Background, QColor(53, 53, 53))
+        app_palette.setColor(QPalette.Window, QColor(53, 53, 53))
+        app_palette.setColor(QPalette.WindowText, QColor(255, 255, 255))
+        app_palette.setColor(QPalette.Button, QColor(53, 53, 53))
+        app_palette.setColor(QPalette.ButtonText, QColor(255, 255, 255))
+        app_palette.setColor(QPalette.Highlight, QColor(255, 0, 127))
+        app_palette.setColor(QPalette.HighlightedText, QColor(255, 255, 255))
+        
+        self.setPalette(app_palette)
+
+        # Настройка стилей для верхней панели окна
+        self.setStyleSheet("""
+            QMainWindow {
+                background-color: #353535;
+                color: white;
+            }
+            QMenuBar {
+                background-color: #353535;
+                color: white;
+            }
+            QMenuBar::item {
+                background: transparent;
+                padding: 5px;
+            }
+            QMenuBar::item:selected {
+                background-color: #555555;
+            }
+        """)
+
 if __name__ == '__main__':
     # Запуск Flask в отдельном потоке
     flask_thread = Thread(target=run_flask)
@@ -153,4 +202,3 @@ if __name__ == '__main__':
     window = BrowserWindow()
     window.show()
     sys.exit(qt_app.exec_())
-

@@ -11,8 +11,9 @@ from PyQt5.QtCore import QUrl
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtGui import QIcon, QPalette, QColor
+from flask import send_from_directory
 
-IMGUR_CLIENT_ID = "YOUR_CLIENT_ID"
+IMGUR_CLIENT_ID = "49a94f02de3c732"
 
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'pdf'}
@@ -25,11 +26,9 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 SYSTEM_DOWNLOAD_FOLDER = str(Path.home() / "Downloads")
 
 def allowed_file(filename):
-    """Проверяет, разрешен ли файл для загрузки"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def get_unique_filename(folder, base_filename):
-    """Получение уникального имени файла"""
     counter = 1
     filename = f"{base_filename}_{counter}.png"
     while os.path.exists(os.path.join(folder, filename)):
@@ -38,7 +37,6 @@ def get_unique_filename(folder, base_filename):
     return filename
 
 def upload_to_imgur(image_path):
-    """Загрузка изображения на Imgur"""
     headers = {
         "Authorization": f"Client-ID {IMGUR_CLIENT_ID}"
     }
@@ -53,6 +51,8 @@ def upload_to_imgur(image_path):
             data = response.json()
             imgur_link = data['data']['link']
             webbrowser.open_new_tab(imgur_link) 
+            
+            os.remove(image_path)
             return imgur_link
         else:
             return None
@@ -61,7 +61,6 @@ def upload_to_imgur(image_path):
         return None
 
 def convert_pdf_to_png(pdf_path, output_folder):
-    """Конвертация PDF в PNG"""
     converted_files = []
     imgur_links = []
     try:
@@ -84,6 +83,10 @@ def convert_pdf_to_png(pdf_path, output_folder):
     except Exception as e:
         raise RuntimeError(f"Ошибка при конвертации: {e}")
     return converted_files, imgur_links
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory('static', 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 @app.route('/')
 def index():
@@ -110,6 +113,8 @@ def upload_file():
                 "imgur_links": imgur_links,
                 "saved_files": [os.path.basename(f) for f in converted_files]
             }
+            os.remove(file_path) 
+
             return jsonify(response), 200
         except Exception as e:
             return jsonify({"error": str(e)}), 500
@@ -125,7 +130,7 @@ class BrowserWindow(QMainWindow):
         self.setWindowTitle("PDF to PNG Converter")
         self.setGeometry(100, 100, 1200, 800)
 
-        icon_path = 'icon.ico'
+        icon_path = 'static/icon.ico'
         if os.path.exists(icon_path):
             self.setWindowIcon(QIcon(icon_path))  
         else:
@@ -135,7 +140,7 @@ class BrowserWindow(QMainWindow):
 
         self.setFixedSize(450, 400) 
 
-        self.setWindowIcon(QIcon('C:/Users/justi/Downloads/docx/icon.ico'))
+        self.setWindowIcon(QIcon('static/icon.ico'))
 
         self.browser = QWebEngineView()
         self.browser.setUrl(QUrl("http://127.0.0.1:5000/"))
@@ -148,7 +153,6 @@ class BrowserWindow(QMainWindow):
         self.setCentralWidget(container)
 
     def set_dark_theme(self):
-        """Настройка темной темы для приложения"""
         app_palette = QPalette()
         
         app_palette.setColor(QPalette.Background, QColor(53, 53, 53))
@@ -161,7 +165,7 @@ class BrowserWindow(QMainWindow):
         
         self.setPalette(app_palette)
 
-        self.setStyleSheet("""
+        self.setStyleSheet(""" 
             QMainWindow {
                 background-color: #353535;
                 color: white;
